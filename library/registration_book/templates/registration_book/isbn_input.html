@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Registration - ISBN Input</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="min-vh-100 d-flex align-items-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 d-flex flex-column align-items-center">
+                <h2 class="mb-3 text-center">Book Registration</h2>
+                <p class="mb-4 text-center">Enter the ISBN to fetch book information from OpenBD API</p>
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+                
+                <form method="post" class="w-50">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ form.isbn.label_tag }}
+                        {{ form.isbn }}
+                        <div class="form-text">{{ form.isbn.help_text }}</div>
+                        {% if form.isbn.errors %}
+                            <div class="text-danger">{{ form.isbn.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mb-2">Fetch Book Info</button>
+                    <a href="{% url 'index' %}" class="btn btn-outline-secondary w-100">Back to Home</a>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>

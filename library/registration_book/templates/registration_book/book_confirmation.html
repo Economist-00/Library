@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Registration - Confirmation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hidden-field {
+            display: none;
+        }
+        .form-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="mb-0">Confirm Book Information</h2>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Please review and modify the book information if needed, then specify the storage location.</p>
+                        
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                <strong>Form errors:</strong>
+                                <ul>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                    <li>{{ field }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ form.isbn }}
+                            <!-- Hidden fields -->
+                            {{ form.image_url }}
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-section">
+                                        <h4 class="border-bottom pb-2">Book Details</h4>
+                                        {% if book_data.image_url %}
+                                        <div class="text-center mb-4">
+                                            <img src="{{ book_data.image_url }}" 
+                                                alt="Book cover" 
+                                                class="img-thumbnail"
+                                                style="max-height: 300px;">
+                                            <p class="text-muted mt-2">Cover image from OpenBD</p>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">{{ form.title.label }}</label>
+                                            {{ form.title }}
+                                            {% if form.title.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.title.errors }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">{{ form.author.label }}</label>
+                                            {{ form.author }}
+                                            {% if form.author.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.author.errors }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">{{ form.publish_date.label }}</label>
+                                            {{ form.publish_date }}
+                                            <div class="form-text">Format: YYYYMM or YYYYMMDD</div>
+                                            {% if form.publish_date.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.publish_date.errors }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-section">
+                                        <h4 class="border-bottom pb-2">Storage Information</h4>
+                                        <div class="mb-3">
+                                            <label class="form-label">{{ form.storage_name.label }}</label>
+                                            {{ form.storage_name }}
+                                            <div class="form-text">{{ form.storage_name.help_text }}</div>
+                                            {% if form.storage_name.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.storage_name.errors }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Display ISBN from session -->
+                                        <div class="mb-3">
+                                            <label class="form-label">ISBN</label>
+                                            <input type="text" class="form-control" 
+                                                value="{{ book_data.isbn }}" readonly>
+                                        </div>
+                                        
+                                        <!-- Status indicator -->
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-info-circle"></i>
+                                            Book will be registered with the above ISBN
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="bi bi-bookmark-check"></i> Register Book
+                                </button>
+                                <a href="{% url 'isbn_input' %}" class="btn btn-outline-secondary btn-lg">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Start Over
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
