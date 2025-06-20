@@ -25,3 +25,7 @@ class CreateBookForm(forms.ModelForm):
             'publish_date': forms.TextInput(attrs={'class': 'form-control'}),
             'image_url': forms.HiddenInput(),
         }
+
+
+class BookInstanceSearchForm(forms.Form):
+    isbn = forms.CharField(label='ISBN', required=True, max_length=13)

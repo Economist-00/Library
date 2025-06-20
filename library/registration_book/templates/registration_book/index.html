@@ -8,9 +8,14 @@
     <div class="container text-center">
         <h1 class="mb-4">Book Registration App</h1>
         <p class="lead mb-5">Manage your book collection with ease.</p>
+        <div class="display: flex">
         <a href="{% url 'isbn_input' %}" class="btn btn-primary btn-lg">
             Register a New Book
         </a>
+        <a href="{% url 'book_instance_search' %}" class="btn btn-primary btn-lg">
+            Delete a book instance
+        </a>
+        </div>
     </div>
 </body>
 </html>

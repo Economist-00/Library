@@ -28,8 +28,8 @@ class Storage(models.Model):
     
 class BookInstance(models.Model):
     book_instance_id = models.UUIDField('蔵書ID', primary_key=True, default=uuid.uuid4)
-    storage = models.OneToOneField(Storage, on_delete=models.CASCADE)
-    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    storage = models.ForeignKey(Storage, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='instances')
 
     class Meta:
         ordering = ['book_instance_id']

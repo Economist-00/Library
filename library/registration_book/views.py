@@ -1,12 +1,12 @@
 import requests
 import json
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
 from django.views import generic
 from django.db import transaction, IntegrityError
 from django.urls import reverse
-from .forms import IsbnForm, CreateBookForm
+from .forms import IsbnForm, CreateBookForm, BookInstanceSearchForm
 from .models import Book, BookInstance, Storage
 # Create your views here.
 
@@ -67,7 +67,7 @@ def book_confirmation_view(request):
             storage_name = form.cleaned_data.pop('storage_name')
             try:
                 with transaction.atomic():
-                    book, created = Book.objects.update_or_create(
+                    book, _ = Book.objects.update_or_create(
                         isbn=book_data['isbn'],
                         defaults=form.cleaned_data
                     )
@@ -94,3 +94,44 @@ def book_confirmation_view(request):
 
 def registration_complete_view(request):
     return render(request, 'registration_book/registration_complete.html')
+
+
+def book_instance_search(request):
+    form = BookInstanceSearchForm(request.GET or None)
+    book = None
+    instances = None
+
+    # Only search if ISBN parameter exists and form is valid
+    if request.GET.get('isbn') and form.is_valid():
+        isbn = form.cleaned_data['isbn']
+        try:
+            book = Book.objects.get(isbn=isbn)
+            instances = book.instances.all().select_related('storage')
+        except Book.DoesNotExist:
+            # book remains None, template will handle the "not found" message
+            pass
+
+    return render(request, 'registration_book/book_instance_search.html', {
+        'form': form,
+        'book': book,
+        'instances': instances,
+    })
+
+
+def book_instance_delete(request, pk):
+    instance = get_object_or_404(BookInstance, pk=pk)
+    if request.method == 'POST':
+        with transaction.atomic():
+            book = instance.book
+            instance.delete()
+            if not book.instances.exists():
+                book.delete()
+        messages.success(request, 'Book instance—and book if orphaned—deleted successfully!')
+        return redirect('delete_complete')  # Redirect to confirmation page
+    return render(request, 'registration_book/book_instance_delete.html', {
+        'instance': instance
+    })
+
+def delete_complete(request):
+    """Renders the delete completion page."""
+    return render(request, 'registration_book/delete_complete.html')
