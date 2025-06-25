@@ -4,12 +4,12 @@ import uuid
 
 class Book(models.Model):
     book_id = models.AutoField('書籍ID', primary_key=True)
-    isbn = models.CharField('ISBN', max_length=13, unique=True)
+    isbn = models.CharField('ISBN', max_length=13, unique=True, blank=True, null=True)
     title = models.CharField('タイトル', max_length=255)
     author = models.CharField('著者', max_length=255)
     publish_date = models.CharField('出版日', max_length=15)  # Added max_length
     image_url = models.URLField('画像用リンク', max_length=255, blank=True, null=True)
-
+    subject = models.TextField('ジャンル', blank=True, null=True)
     class Meta:
         ordering = ['title', '-publish_date']
     

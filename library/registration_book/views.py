@@ -6,7 +6,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views import generic
 from django.db import transaction, IntegrityError
 from django.urls import reverse
-from .forms import IsbnForm, CreateBookForm, BookInstanceSearchForm
+from .forms import IsbnForm, BookInstanceForm, BookInstanceSearchForm, ManualBookForm
 from .models import Book, BookInstance, Storage
 # Create your views here.
 
@@ -38,39 +38,112 @@ def fetch_book_from_openbd(isbn):
     try:
         url = f"https://api.openbd.jp/v1/get?isbn={isbn}"
         response = requests.get(url)
-        
+
         if response.status_code == 200:
             data = response.json()
             if data and data[0]:
                 book = data[0]
-                summary = book.get('summary', {})
-                return {
-                    'title': summary.get('title', ''),
-                    'author': summary.get('author', ''),
-                    'publish_date': summary.get('pubdate', ''),
-                    'image_url': summary.get('cover', '')
+
+                book_info = {
+                    'isbn': isbn,
+                    'title': '',
+                    'author': '',
+                    'publish_date': '',
+                    'subject': '',
+                    'image_url': ''
                 }
+
+                # Extract from 'summary'
+                if 'summary' in book:
+                    summary = book['summary']
+                    book_info.update({
+                        'title': summary.get('title', ''),
+                        'author': summary.get('author', ''),
+                        'publish_date': summary.get('pubdate', ''),
+                        'image_url': summary.get('cover', '') or 'https://www.svgrepo.com/show/83343/book.svg'
+                    })
+
+                # Extract 'subject' from ONIX if available
+                try:
+                    descriptive_detail = book.get('onix', {}).get('DescriptiveDetail', {})
+                    subject_data = descriptive_detail.get('Subject')
+
+                    subject_list = []
+
+                    if isinstance(subject_data, dict):
+                        subject_text = subject_data.get('SubjectHeadingText') or subject_data.get('SubjectCode')
+                        if subject_text:
+                            subject_list.append(subject_text)
+
+                    elif isinstance(subject_data, list):
+                        for item in subject_data:
+                            subject_text = item.get('SubjectHeadingText') or item.get('SubjectCode')
+                            if subject_text:
+                                subject_list.append(subject_text)
+
+                    if subject_list:
+                        book_info['subject'] = '; '.join(subject_list)
+
+                except Exception as e:
+                    print(f"Subject extraction error: {e}")
+                    book_info['subject'] = ''
+
+                return book_info
+
     except Exception as e:
-        print(f"API error: {e}")
+        print(f"OpenBD API error: {e}")
+
     return None
+
+def manual_book_registration(request):
+    if request.method == 'POST':
+        form = ManualBookForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    book = form.save(commit=False)
+                    if not book.image_url:
+                        book.image_url = 'https://www.svgrepo.com/show/83343/book.svg'
+                    book.save()
+
+                    storage_name = form.cleaned_data['storage_name']
+                    storage, _ = Storage.objects.get_or_create(storage_name=storage_name)
+
+                    BookInstance.objects.create(book=book, storage=storage)
+
+                    messages.success(request, 'Book registered successfully.')
+                    return redirect('registration_complete')
+
+            except Exception as e:
+                messages.error(request, f'Error: {e}')
+
+    else:
+        form = ManualBookForm()
+
+    return render(request, 'registration_book/manual_book_registration.html', {'form': form})
 
 def book_confirmation_view(request):
     book_data = request.session.get('book_data')
     if not book_data:
         return redirect('isbn_input')
-    initial_data = book_data.copy()
-    initial_data['isbn'] = book_data.get('isbn', '')
+    # initial_data = book_data.copy()
+    # initial_data['isbn'] = book_data.get('isbn', '')
 
     if request.method == 'POST':
-        form = CreateBookForm(request.POST, initial=initial_data)
+        form = BookInstanceForm(request.POST)
         if form.is_valid():
             storage_name = form.cleaned_data.pop('storage_name')
             try:
                 with transaction.atomic():
-                    book, _ = Book.objects.update_or_create(
-                        isbn=book_data['isbn'],
-                        defaults=form.cleaned_data
-                    )
+                    book, created = Book.objects.get_or_create(
+                        isbn=book_data['isbn'])
+                    if not created:
+                        book.title = book_data.get('title', '')
+                        book.author = book_data.get('author', '')
+                        book.publish_date = book_data.get('publish_date', '')
+                        book.subject = book_data.get('subject', '')
+                        book.image_url = book_data.get('image_url', '')
+                        book.save()
                     storage, _ = Storage.objects.get_or_create(
                         storage_name=storage_name
                     )
@@ -85,7 +158,7 @@ def book_confirmation_view(request):
             except Exception as e:
                 messages.error(request, f'Error saving record: {str(e)}')
     else:
-        form = CreateBookForm(initial=initial_data)
+        form = BookInstanceForm(initial=book_data)
 
     return render(request, 'registration_book/book_confirmation.html', {
         'form': form,

@@ -13,19 +13,41 @@ class IsbnForm(forms.Form):
         return data
 
 
-class CreateBookForm(forms.ModelForm):
-    storage_name = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'enter storage name'}), help_text="create a new storage location for this copy")
-    class Meta:
-        model = Book
-        fields = ['isbn', 'title', 'author', 'publish_date', 'image_url']
-        widgets = {
-            'isbn': forms.HiddenInput(),
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'author': forms.TextInput(attrs={'class': 'form-control'}),
-            'publish_date': forms.TextInput(attrs={'class': 'form-control'}),
-            'image_url': forms.HiddenInput(),
-        }
-
+class BookInstanceForm(forms.Form):
+    storage_name = forms.CharField(
+        max_length=255,
+        label='Storage Location',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter storage location'
+        }))
 
 class BookInstanceSearchForm(forms.Form):
     isbn = forms.CharField(label='ISBN', required=True, max_length=13)
+
+
+class ManualBookForm(forms.ModelForm):
+    storage_name = forms.CharField(
+        label="Storage Location",
+        max_length=255,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter storage location'})
+    )
+
+    class Meta:
+        model = Book
+        fields = ['isbn', 'title', 'author', 'publish_date', 'subject', 'image_url']
+        widgets = {
+            'isbn': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'author': forms.TextInput(attrs={'class': 'form-control'}),
+            'publish_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYYMM or YYYY'}),
+            'subject': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'image_url': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional image URL'}),
+        }
+
+    def clean_isbn(self):
+        isbn = self.cleaned_data.get('isbn')
+        if isbn:
+            if len(isbn) != 13:
+                raise forms.ValidationError('ISBN must be 13 digits if provided.')
+        return isbn
