@@ -12,7 +12,7 @@
         <form method="post">
             {% csrf_token %}
             <button type="submit" class="btn btn-danger">Confirm Delete</button>
-            <a href="{% url 'book_instance_search' %}" class="btn btn-outline-secondary">Cancel</a>
+            <a href="{% url 'delete_book_instance_search' %}" class="btn btn-outline-secondary">Cancel</a>
         </form>
     </div>
 </body>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .book-cover {
+            width: 60px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .table-image td, .table-image th {
+            vertical-align: middle;
+        }
+        .search-summary {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+{% load pagination_tags %}
+<div class="container py-4">
+    <h2 class="mb-4 text-center">Book Instance Search Results</h2>
+    
+    <!-- Display what user searched for or show "all results" -->
+    {% if form.is_bound %}
+        {% if request.GET.isbn or request.GET.title or request.GET.author %}
+            <div class="search-summary">
+                <h5><i class="bi bi-search"></i> Search Results</h5>
+                <p class="mb-0">
+                    <strong>You searched for:</strong>
+                    {% if request.GET.isbn %}
+                        <span class="badge bg-primary me-2">ISBN: "{{ request.GET.isbn }}"</span>
+                    {% endif %}
+                    {% if request.GET.title %}
+                        <span class="badge bg-success me-2">Title: "{{ request.GET.title }}"</span>
+                    {% endif %}
+                    {% if request.GET.author %}
+                        <span class="badge bg-info me-2">Author: "{{ request.GET.author }}"</span>
+                    {% endif %}
+                </p>
+            </div>
+        {% else %}
+            <div class="search-summary">
+                <h5><i class="bi bi-list"></i> All Book Instances</h5>
+                <p class="mb-0">
+                    <strong>Showing all available book instances</strong>
+                </p>
+            </div>
+        {% endif %}
+
+        <!-- Results section - show if form was submitted -->
+        {% if page_obj %}
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Results</h5>
+                    <span class="badge bg-primary">
+                        Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-image">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Cover</th>
+                                    <th>Book Title</th>
+                                    <th>Author</th>
+                                    <th>Storage Location</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for instance in page_obj %}
+                                <tr>
+                                    <td class="text-center">
+                                        {% if instance.book.image_url %}
+                                            <img src="{{ instance.book.image_url }}" 
+                                                 alt="Cover of {{ instance.book.title }}" 
+                                                 class="book-cover img-thumbnail">
+                                        {% else %}
+                                            <img src="https://www.svgrepo.com/show/83343/book.svg" 
+                                                 alt="No cover available" 
+                                                 class="book-cover img-thumbnail">
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ instance.book.title }}</td>
+                                    <td>{{ instance.book.author }}</td>
+                                    <td>{{ instance.storage.storage_name }}</td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-outline-primary">Rent</a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">
+                                        No book instances found matching your search criteria.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination section -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Search results pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <!-- First page -->
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% query_transform page=1 %}" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% query_transform page=page_obj.previous_page_number %}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            <!-- Page numbers -->
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active" aria-current="page">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% query_transform page=num %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            <!-- Next and last page -->
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% query_transform page=page_obj.next_page_number %}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% query_transform page=page_obj.paginator.num_pages %}" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    
+                    <!-- Pagination info -->
+                    <div class="text-center text-muted">
+                        <small>
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} 
+                            ({{ page_obj.paginator.count }} total results)
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-warning text-center">
+                <h4>No Results Found</h4>
+                <p>No book instances match your search criteria. Try modifying your search terms.</p>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info text-center">
+            <h4>No Search Performed</h4>
+            <p>Please enter search criteria above to find book instances.</p>
+        </div>
+    {% endif %}
+    
+    <div class="text-center mt-4">
+        <a href="{% url 'book_instance_search' %}" class="btn btn-outline-secondary">New Search</a>
+        <a href="{% url 'rental_index' %}" class="btn btn-outline-secondary">Back to Home</a>
+    </div>
+</div>
+</body>
+</html>

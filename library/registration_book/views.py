@@ -2,18 +2,27 @@ import requests
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
 from django.http import HttpResponse, JsonResponse
 from django.views import generic
 from django.db import transaction, IntegrityError
+from django.db.models import Q
 from django.urls import reverse
-from .forms import IsbnForm, BookInstanceForm, BookInstanceSearchForm, ManualBookForm
+from .forms import IsbnForm, BookInstanceSearchForm, ManualBookForm, BookConfirmationForm
 from .models import Book, BookInstance, Storage
 # Create your views here.
 
-def index(request):
-    return render(request, 'registration_book/index.html')
+@login_required(login_url='/accounts/librarian/login/')
+def reg_index(request):
+    if not hasattr(request.user, 'user_type') or request.user.user_type != 'librarian':
+        return redirect('/accounts/librarian/login/')
+    return render(request, 'registration_book/reg_index.html')
 
+@login_required(login_url='/accounts/librarian/login/')
 def isbn_input_view(request):
+    if not hasattr(request.user, 'user_type') or request.user.user_type != 'librarian':
+        return redirect('/accounts/librarian/login/')
     if request.method == 'POST':
         form = IsbnForm(request.POST)
         if form.is_valid():
@@ -33,7 +42,7 @@ def isbn_input_view(request):
         form = IsbnForm()
     
     return render(request, 'registration_book/isbn_input.html', {'form': form})
-    
+   
 def fetch_book_from_openbd(isbn):
     try:
         url = f"https://api.openbd.jp/v1/get?isbn={isbn}"
@@ -95,7 +104,10 @@ def fetch_book_from_openbd(isbn):
 
     return None
 
+@login_required(login_url='/accounts/librarian/login/')
 def manual_book_registration(request):
+    if not hasattr(request.user, 'user_type') or request.user.user_type != 'librarian':
+        return redirect('/accounts/librarian/login/')
     if request.method == 'POST':
         form = ManualBookForm(request.POST)
         if form.is_valid():
@@ -122,76 +134,99 @@ def manual_book_registration(request):
 
     return render(request, 'registration_book/manual_book_registration.html', {'form': form})
 
+@login_required(login_url='/accounts/librarian/login/')
 def book_confirmation_view(request):
+    if not hasattr(request.user, 'user_type') or request.user.user_type != 'librarian':
+        return redirect('/accounts/librarian/login/')
     book_data = request.session.get('book_data')
     if not book_data:
         return redirect('isbn_input')
-    # initial_data = book_data.copy()
-    # initial_data['isbn'] = book_data.get('isbn', '')
 
     if request.method == 'POST':
-        form = BookInstanceForm(request.POST)
+        form = BookConfirmationForm(request.POST)
         if form.is_valid():
-            storage_name = form.cleaned_data.pop('storage_name')
             try:
                 with transaction.atomic():
-                    book, created = Book.objects.get_or_create(
-                        isbn=book_data['isbn'])
-                    if not created:
-                        book.title = book_data.get('title', '')
-                        book.author = book_data.get('author', '')
-                        book.publish_date = book_data.get('publish_date', '')
-                        book.subject = book_data.get('subject', '')
-                        book.image_url = book_data.get('image_url', '')
-                        book.save()
-                    storage, _ = Storage.objects.get_or_create(
-                        storage_name=storage_name
+                    # Check if book exists
+                    book, _ = Book.objects.get_or_create(
+                        isbn=form.cleaned_data['isbn'],
+                        defaults={
+                            'title': form.cleaned_data['title'],
+                            'author': form.cleaned_data['author'],
+                            'publish_date': form.cleaned_data['publish_date'],
+                            'subject': form.cleaned_data['subject'],
+                            'image_url': form.cleaned_data['image_url'] or 'https://www.svgrepo.com/show/83343/book.svg'
+                        }
                     )
+
+                    # Create or get storage
+                    storage, _ = Storage.objects.get_or_create(
+                        storage_name=form.cleaned_data['storage_name']
+                    )
+
+                    # Create BookInstance (a physical copy)
                     BookInstance.objects.create(
                         book=book,
                         storage=storage
                     )
+
+                    # Clear session data
                     del request.session['book_data']
-                    return redirect('registration_complete')  # <-- Only here!
-            except IntegrityError as e:
-                messages.error(request, f'Database error: {str(e)}')
+
+                    return redirect('registration_complete')
+
             except Exception as e:
-                messages.error(request, f'Error saving record: {str(e)}')
+                messages.error(request, f'Error: {e}')
+
     else:
-        form = BookInstanceForm(initial=book_data)
+        form = BookConfirmationForm(initial={
+            'isbn': book_data.get('isbn'),
+            'title': book_data.get('title'),
+            'author': book_data.get('author'),
+            'publish_date': book_data.get('publish_date'),
+            'subject': book_data.get('subject'),
+            'image_url': book_data.get('image_url'),
+        })
 
     return render(request, 'registration_book/book_confirmation.html', {
-        'form': form,
-        'book_data': book_data
+        'form': form
     })
 
+@login_required(login_url='/accounts/librarian/login/')
 def registration_complete_view(request):
+    if not hasattr(request.user, 'user_type') or request.user.user_type != 'librarian':
+        return redirect('/accounts/librarian/login/')
     return render(request, 'registration_book/registration_complete.html')
 
-
-def book_instance_search(request):
+@login_required(login_url='/accounts/librarian/login/')
+def delete_book_instance_search(request):
+    if not hasattr(request.user, 'user_type') or request.user.user_type != 'librarian':
+        return redirect('/accounts/librarian/login/')
     form = BookInstanceSearchForm(request.GET or None)
-    book = None
     instances = None
 
-    # Only search if ISBN parameter exists and form is valid
-    if request.GET.get('isbn') and form.is_valid():
-        isbn = form.cleaned_data['isbn']
-        try:
-            book = Book.objects.get(isbn=isbn)
-            instances = book.instances.all().select_related('storage')
-        except Book.DoesNotExist:
-            # book remains None, template will handle the "not found" message
-            pass
+    if form.is_valid():
+        isbn = form.cleaned_data.get('isbn', '').strip()
+        title = form.cleaned_data.get('title', '').strip()
+        if isbn or title:
+            query = Q()
+            if isbn:
+                query |= Q(book__isbn__icontains=isbn)
+            if title:
+                query |= Q(book__title__icontains=title)
+            instances = BookInstance.objects.filter(query).select_related('book', 'storage')
+        else:
+            instances = []
 
-    return render(request, 'registration_book/book_instance_search.html', {
+    return render(request, 'registration_book/delete_book_instance_search.html', {
         'form': form,
-        'book': book,
         'instances': instances,
     })
 
-
+@login_required(login_url='/accounts/librarian/login/')
 def book_instance_delete(request, pk):
+    if not hasattr(request.user, 'user_type') or request.user.user_type != 'librarian':
+        return redirect('/accounts/librarian/login/')
     instance = get_object_or_404(BookInstance, pk=pk)
     if request.method == 'POST':
         with transaction.atomic():
@@ -205,6 +240,13 @@ def book_instance_delete(request, pk):
         'instance': instance
     })
 
+@login_required(login_url='/accounts/librarian/login/')
 def delete_complete(request):
+    if not hasattr(request.user, 'user_type') or request.user.user_type != 'librarian':
+        return redirect('/accounts/librarian/login/')
     """Renders the delete completion page."""
     return render(request, 'registration_book/delete_complete.html')
+
+def registration_book_logout(request):
+    logout(request)
+    return redirect('librarian_login')
