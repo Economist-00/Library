@@ -28,6 +28,5 @@ urlpatterns = [
     ),
     path('profile/', views.profile_redirect, name='profile'),
     path('employee/register/', views.register_employee, name='register_employee'),
-    path('librarian/register/', views.register_librarian, name='register_librarian'),
     path('logout/', views.user_logout, name='logout'),
 ]

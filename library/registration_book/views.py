@@ -124,7 +124,7 @@ def manual_book_registration(request):
                     BookInstance.objects.create(book=book, storage=storage)
 
                     messages.success(request, 'Book registered successfully.')
-                    return redirect('registration_complete')
+                    return redirect('complete_manual')
 
             except Exception as e:
                 messages.error(request, f'Error: {e}')
@@ -133,6 +133,13 @@ def manual_book_registration(request):
         form = ManualBookForm()
 
     return render(request, 'registration_book/manual_book_registration.html', {'form': form})
+
+@login_required
+def registration_complete_manual(request):
+    if request.user.user_type != 'librarian':
+        return redirect('librarian_login')
+
+    return render(request, 'registration_book/registration_complete_manual.html')
 
 @login_required(login_url='/accounts/librarian/login/')
 def book_confirmation_view(request):

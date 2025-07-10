@@ -7,7 +7,14 @@ urlpatterns = [
     path('search/', views.book_instance_search, name='book_instance_search'),
     path('results/', views.book_instance_results, name='book_instance_results'),
     path('logout/', rental_logout, name='rental_logout'),
-    # path('book/<int:book_id>/'),
+    path('delete-account/', views.delete_account, name='delete_account'),
+    path('instance/<str:instance_id>/', views.book_instance_detail, name='book_instance_detail'),
+    path(
+        'instance/<str:instance_id>/rent/',
+        views.rent_with_due_date,
+        name='rent_with_due_date'
+    ),
+    path('create-loan/', views.create_loan, name='create_loan'),
     # path('rent/<uuid:book_instance_id>/'),
     # path('reserve/'),
     # path('dashboard/'),

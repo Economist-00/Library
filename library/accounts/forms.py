@@ -43,6 +43,12 @@ class EmployeeCreationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add Bootstrap class to every field
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
 
 class LibrarianCreationForm(UserCreationForm):
     class Meta:
