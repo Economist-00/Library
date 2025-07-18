@@ -92,9 +92,11 @@
                                     <td>{{ instance.book.author }}</td>
                                     <td>{{ instance.storage.storage_name }}</td>
                                     <td>
-                                        <a href="{% url 'book_instance_detail' instance_id=instance.book_instance_id %}" class="btn btn-primary btn-sm">
+                                        {% with request.GET.urlencode as params %}
+                                        <a href="{% url 'book_instance_detail' instance_id=instance.book_instance_id %}?{{ params }}" class="btn btn-primary btn-sm">
                                             View Details & Rent
                                         </a>
+                                        {% endwith %}
                                     </td>
                                 </tr>
                                 {% empty %}

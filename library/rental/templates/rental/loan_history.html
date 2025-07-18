@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Loan History</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .overdue-badge {
+            background-color: #dc3545;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+        .on-loan-badge {
+            background-color: #0d6efd;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+        .returned-badge {
+            background-color: #198754;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+        .reserved-badge {
+            background-color: #ffc107;
+            color: black;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>My Loan History</h2>
+        
+        <!-- Overdue Alert -->
+        {% if overdue_count > 0 %}
+            <div class="alert alert-danger" role="alert">
+                <h5 class="alert-heading">⚠️ Overdue Books!</h5>
+                <p>You have {{ overdue_count }} book{{ overdue_count|pluralize }} overdue. Please return them as soon as possible.</p>
+                <hr>
+                <p class="mb-0">
+                    <a href="#overdue-section" class="alert-link">View overdue books below</a>
+                </p>
+            </div>
+        {% endif %}
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs" id="historyTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="loans-tab" data-bs-toggle="tab" data-bs-target="#loans" type="button" role="tab">
+                    Current & Past Loans
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reservations-tab" data-bs-toggle="tab" data-bs-target="#reservations" type="button" role="tab">
+                    My Reservations
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="historyTabContent">
+            <!-- Loans Tab -->
+            <div class="tab-pane fade show active" id="loans" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-body">
+                        {% if loans %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Book</th>
+                                            <th>Copy ID</th>
+                                            <th>Location</th>
+                                            <th>Loan Start</th>
+                                            <th>Due Date</th>
+                                            <th>Return Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for loan in loans %}
+                                            <tr {% if loan.overdue %}class="table-danger"{% endif %}>
+                                                <td>
+                                                    <strong>{{ loan.book_instance.book.title }}</strong><br>
+                                                    <small class="text-muted">by {{ loan.book_instance.book.author }}</small>
+                                                </td>
+                                                <td>{{ loan.book_instance.book_instance_id }}</td>
+                                                <td>{{ loan.book_instance.storage.storage_name }}</td>
+                                                <td>{{ loan.loan_start|date:"Y/m/d" }}</td>
+                                                <td>{{ loan.due_date|date:"Y/m/d" }}</td>
+                                                <td>
+                                                    {% if loan.return_date %}
+                                                        {{ loan.return_date|date:"Y/m/d" }}
+                                                    {% else %}
+                                                        <span class="text-muted">Not returned</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if loan.return_date %}
+                                                        <span class="returned-badge">Returned</span>
+                                                    {% elif loan.overdue %}
+                                                        <span class="overdue-badge">Overdue</span>
+                                                    {% else %}
+                                                        <span class="on-loan-badge">On Loan</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if not loan.return_date %}
+                                                        <a href="{% url 'return_and_review' loan_id=loan.loan_id %}" class="btn btn-primary btn-sm">
+                                                            Return & Review
+                                                        </a>
+                                                    {% else %}
+                                                        <a href="{% url 'book_instance_detail' instance_id=loan.book_instance.book_instance_id %}" class="btn btn-outline-info btn-sm">
+                                                            View Book
+                                                        </a>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            {% if loans.has_other_pages %}
+                                <nav aria-label="Loan history pagination">
+                                    <ul class="pagination justify-content-center">
+                                        {% if loans.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ loans.previous_page_number }}">Previous</a>
+                                            </li>
+                                        {% endif %}
+                                        
+                                        {% for page_num in loans.paginator.page_range %}
+                                            {% if page_num == loans.number %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ page_num }}</span>
+                                                </li>
+                                            {% else %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if loans.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ loans.next_page_number }}">Next</a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            {% endif %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <h5>No loans found</h5>
+                                <p class="text-muted">You haven't borrowed any books yet.</p>
+                                <a href="{% url 'book_instance_search' %}" class="btn btn-primary">Search for Books</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reservations Tab -->
+            <div class="tab-pane fade" id="reservations" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-body">
+                        {% if reservations %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Book</th>
+                                            <th>Copy ID</th>
+                                            <th>Location</th>
+                                            <th>Reservation Start</th>
+                                            <th>Reservation End</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for reservation in reservations %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ reservation.book_instance.book.title }}</strong><br>
+                                                    <small class="text-muted">by {{ reservation.book_instance.book.author }}</small>
+                                                </td>
+                                                <td>{{ reservation.book_instance.book_instance_id }}</td>
+                                                <td>{{ reservation.book_instance.storage.storage_name }}</td>
+                                                <td>{{ reservation.future_rent|date:"Y/m/d" }}</td>
+                                                <td>{{ reservation.future_return|date:"Y/m/d" }}</td>
+                                                <td>
+                                                    <span class="reserved-badge">Reserved</span>
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'book_instance_detail' instance_id=reservation.book_instance.book_instance_id %}" class="btn btn-outline-info btn-sm">
+                                                        View Book
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <h5>No reservations found</h5>
+                                <p class="text-muted">You haven't made any reservations yet.</p>
+                                <a href="{% url 'book_instance_search' %}" class="btn btn-primary">Search for Books</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="text-center mt-4">
+        <a href="{% url 'rental_index' %}" class="btn btn-primary">
+            <i class="fas fa-home"></i> Back to Home
+        </a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

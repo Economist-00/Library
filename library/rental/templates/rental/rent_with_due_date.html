@@ -25,11 +25,13 @@
 <div class="container-fluid center-container">
     <div class="card rent-card">
         <div class="card-body">
-            <h2 class="card-title text-center mb-4">Rent Copy {{ book_instance.book_instance_id }}</h2>
+            <h2 class="card-title text-center mb-4">Rent This Copy </h2>
             <p class="text-center mb-4">
               <strong>Book:</strong> {{ book_instance.book.title }}<br>
               <strong>Location:</strong> {{ book_instance.storage.storage_name }}
             </p>
+    
+            
             <form method="post">
                 {% csrf_token %}
                 <div class="mb-3">
@@ -38,6 +40,14 @@
                     {% for err in form.due_date.errors %}
                       <div class="text-danger">{{ err }}</div>
                     {% endfor %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
                 </div>
                 <div class="d-flex justify-content-between">
                     <button type="submit" class="btn btn-primary">Confirm Rental</button>

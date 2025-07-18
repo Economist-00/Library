@@ -12,6 +12,7 @@ class Book(models.Model):
     subject = models.TextField('ジャンル', blank=True, null=True)
     class Meta:
         ordering = ['title', '-publish_date']
+        unique_together = ('title', 'author')
     
     def __str__(self):
         return self.title

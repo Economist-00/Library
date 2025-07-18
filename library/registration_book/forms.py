@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Book
+from .models import Book, BookInstance, Storage
 
 class IsbnForm(forms.Form):
     isbn = forms.CharField(help_text="ISBN", max_length=13, widget=forms.TextInput(attrs={'placeholder': 'Enter 13-digit ISBN'}))
@@ -28,57 +28,46 @@ class BookInstanceSearchForm(forms.Form):
     
     
 class ManualBookForm(forms.ModelForm):
-    storage_name = forms.CharField(
-        label="Storage Location",
-        max_length=255,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter storage location'})
-    )
-
     class Meta:
         model = Book
-        fields = ['isbn', 'title', 'author', 'publish_date', 'subject', 'image_url']
-        widgets = {
-            'isbn': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional'}),
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'author': forms.TextInput(attrs={'class': 'form-control'}),
-            'publish_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYYMM or YYYY'}),
-            'subject': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
-            'image_url': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional image URL'}),
-        }
+        fields = ['title', 'author', 'isbn', 'publish_date', 'subject']
+    
+    storage = forms.CharField(
+        label="Storage Location",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Enter or select a storage"})
+    )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add Bootstrap classes to form fields
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
+    
+    def clean(self):
+        """
+        Override clean method to prevent unique constraint validation
+        since we handle book creation/retrieval in the view with get_or_create
+        """
+        # Get cleaned data without calling super().clean()
+        # This prevents the unique_together validation from running
+        cleaned_data = {}
+        for field_name, field in self.fields.items():
+            if field_name != 'storage':  # Skip storage field as it's not part of Book model
+                try:
+                    cleaned_data[field_name] = field.clean(self.data.get(field_name))
+                except ValidationError:
+                    # If individual field validation fails, add the error
+                    self.add_error(field_name, field.error_messages.get('invalid', 'Invalid value'))
+        
+        # Add storage field separately
+        storage_field = self.fields['storage']
+        try:
+            cleaned_data['storage'] = storage_field.clean(self.data.get('storage'))
+        except ValidationError:
+            self.add_error('storage', 'Please select a valid storage location')
+        
+        return cleaned_data
 
-    def clean_isbn(self):
-        isbn = self.cleaned_data.get('isbn')
-        if isbn:
-            if len(isbn) != 13:
-                raise forms.ValidationError('ISBN must be 13 digits if provided.')
-        return isbn
-
-
-# class BookEditForm(forms.ModelForm):
-#     storage_name = forms.CharField(
-#         label="Storage Location",
-#         max_length=255,
-#         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter storage location'})
-#     )
-
-#     class Meta:
-#         model = Book
-#         fields = ['isbn', 'title', 'author', 'publish_date', 'subject', 'image_url']
-#         widgets = {
-#             'isbn': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional'}),
-#             'title': forms.TextInput(attrs={'class': 'form-control'}),
-#             'author': forms.TextInput(attrs={'class': 'form-control'}),
-#             'publish_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM'}),
-#             'subject': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
-#             'image_url': forms.TextInput(attrs={'class': 'form-control'}),
-#         }
-
-#     def clean_isbn(self):
-#         isbn = self.cleaned_data.get('isbn')
-#         if isbn:
-#             if len(isbn) != 13:
-#                 raise forms.ValidationError('ISBN must be 13 digits if provided.')
-#         return isbn
     
 
 class BookConfirmationForm(forms.Form):

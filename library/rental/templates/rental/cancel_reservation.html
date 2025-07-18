@@ -1,0 +1,60 @@
+<!-- templates/rental/cancel_reservation.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Cancel Reservation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet">
+</head>
+<body>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header text-center">
+            <h4>Cancel Reservation</h4>
+          </div>
+          <div class="card-body">
+            <p>
+              You are about to cancel your reservation for:
+            </p>
+            <div class="mb-4">
+              <h5>{{ reservation.book_instance.book.title }}</h5>
+              <p class="mb-1">
+                <strong>Copy ID:</strong> {{ reservation.book_instance.book_instance_id }}
+              </p>
+              <p class="mb-1">
+                <strong>Location:</strong> {{ reservation.book_instance.storage.storage_name }}
+              </p>
+              <p class="mb-1">
+                <strong>Reserved From:</strong> {{ reservation.future_rent|date:"Y/m/d" }}
+              </p>
+              <p class="mb-1">
+                <strong>Reserved Until:</strong> {{ reservation.future_return|date:"Y/m/d" }}
+              </p>
+            </div>
+            <form method="post">
+              {% csrf_token %}
+              <p>Are you sure you want to cancel this reservation?</p>
+              <div class="d-flex justify-content-between">
+                <a href="{% url 'loan_history' %}" class="btn btn-secondary">
+                  Back to History
+                </a>
+                <button type="submit" class="btn btn-danger">
+                  Yes, Cancel Reservation
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+</script>
+</body>
+</html>

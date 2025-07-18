@@ -108,31 +108,40 @@ def fetch_book_from_openbd(isbn):
 def manual_book_registration(request):
     if not hasattr(request.user, 'user_type') or request.user.user_type != 'librarian':
         return redirect('/accounts/librarian/login/')
-    if request.method == 'POST':
+    if request.method == "POST":
         form = ManualBookForm(request.POST)
         if form.is_valid():
-            try:
-                with transaction.atomic():
-                    book = form.save(commit=False)
-                    if not book.image_url:
-                        book.image_url = 'https://www.svgrepo.com/show/83343/book.svg'
-                    book.save()
-
-                    storage_name = form.cleaned_data['storage_name']
-                    storage, _ = Storage.objects.get_or_create(storage_name=storage_name)
-
-                    BookInstance.objects.create(book=book, storage=storage)
-
-                    messages.success(request, 'Book registered successfully.')
-                    return redirect('complete_manual')
-
-            except Exception as e:
-                messages.error(request, f'Error: {e}')
-
+            # 1) FIND or CREATE the book
+            book, book_created = Book.objects.get_or_create(
+                title=form.cleaned_data["title"],
+                author=form.cleaned_data["author"],
+                defaults={
+                    "isbn": form.cleaned_data.get("isbn") or None,
+                    "publish_date": form.cleaned_data.get("publish_date"),
+                    "image_url": "",
+                    "subject": form.cleaned_data.get("subject") or "",
+                },
+            )
+            # 2) FIND or CREATE the storage by name
+            storage_name = form.cleaned_data["storage"].strip()
+            storage, storage_created = Storage.objects.get_or_create(
+                storage_name=storage_name
+            )
+            # 3) CREATE the new BookInstance
+            book_instance = BookInstance.objects.create(
+                book=book,
+                storage=storage
+            )
+            # 4) SUCCESS MESSAGE
+            if book_created:
+                msg = f'New book "{book.title}" created; copy ID {book_instance.book_instance_id} stored at "{storage_name}".'
+            else:
+                msg = f'Book "{book.title}" exists; copy ID {book_instance.book_instance_id} stored at "{storage_name}".'
+            messages.success(request, msg)
+            return redirect("complete_manual")
     else:
         form = ManualBookForm()
-
-    return render(request, 'registration_book/manual_book_registration.html', {'form': form})
+    return render(request, "registration_book/manual_book_registration.html", {"form": form})
 
 @login_required
 def registration_complete_manual(request):

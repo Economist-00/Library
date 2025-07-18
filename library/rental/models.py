@@ -9,7 +9,7 @@ from accounts.models import Employee
 
 class Loan(models.Model):
     loan_id = models.AutoField('貸出状況ID', primary_key=True)
-    book_instance = models.OneToOneField(BookInstance, on_delete=models.CASCADE, related_name='loan')
+    book_instance = models.ForeignKey(BookInstance, on_delete=models.CASCADE, related_name='loan')
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='loans')
     loan_start = models.DateField('貸出開始日', null=True, blank=True)
     due_date = models.DateField('返却予定日', null=True, blank=True)
@@ -37,6 +37,15 @@ class Loan(models.Model):
         status = 'Returned' if self.return_date else 'On Loan'
         return f'{self.employee.username} renting {self.book_instance.book.title} ({status})'
     
+    class Meta:
+        # enforce only one active loan per instance
+        constraints = [
+            models.UniqueConstraint(
+                fields=['book_instance'],
+                condition=models.Q(return_date__isnull=True),
+                name='unique_active_loan_per_instance'
+            )
+        ]
 
 class Reservation(models.Model):
     reserve_id = models.AutoField('予約状況ID', primary_key=True)
@@ -56,6 +65,14 @@ class Reservation(models.Model):
         if overlapping.exists():
             raise ValidationError("This book instance is already reserved for the selected period.")
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['book_instance', 'employee'],
+                name='unique_reservation_per_user_per_instance'
+            )
+        ]
+        
     def __str__(self):
         return f"{self.employee.username} reserved '{self.book_instance.book.title}' from {self.future_rent} to {self.future_return}"
 
