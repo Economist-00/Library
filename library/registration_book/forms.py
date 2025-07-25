@@ -77,4 +77,4 @@ class BookConfirmationForm(forms.Form):
     publish_date = forms.CharField(max_length=15, required=False)
     subject = forms.CharField(widget=forms.Textarea, required=False)
     image_url = forms.URLField(required=False)
-    storage_name = forms.CharField(max_length=255)  # For the BookInstance
+    storage_name = forms.CharField(max_length=255)  

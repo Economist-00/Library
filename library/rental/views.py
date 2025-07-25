@@ -1,12 +1,14 @@
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q, Avg, Count, BooleanField, ExpressionWrapper
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.utils import timezone
 from datetime import date, timedelta
+import logging
 from urllib.parse import urlencode
 from .models import Loan, Reservation, Review
 from registration_book.models import Book, BookInstance
@@ -48,12 +50,25 @@ def book_instance_results(request):
     instances = None
     page_obj = None
 
+    # Determine sort field and direction
+    sort = request.GET.get('sort', 'title')   # default sort key
+    direction = request.GET.get('dir', 'asc') # 'asc' or 'desc'
+    sort_prefix = '' if direction == 'asc' else '-'
+    # Map allowed sort keys to model fields
+    sort_fields = {
+        'title': 'book__title',
+        'author': 'book__author',
+        'isbn': 'book__isbn',
+        'storage': 'storage__name',  # adjust to your storage field
+    }
+    order_by = sort_prefix + sort_fields.get(sort, 'book__title')
+
     if form.is_valid():
         isbn = form.cleaned_data.get('isbn', '').strip()
         title = form.cleaned_data.get('title', '').strip()
         author = form.cleaned_data.get('author', '').strip()
 
-        # If any search criteria is provided, filter accordingly
+        # Build search query
         if isbn or title or author:
             query = Q()
             if isbn:
@@ -62,20 +77,26 @@ def book_instance_results(request):
                 query |= Q(book__title__icontains=title)
             if author:
                 query |= Q(book__author__icontains=author)
-            instances = BookInstance.objects.filter(query).select_related('book', 'storage')
+            instances = BookInstance.objects.filter(query)
         else:
-            # If no search criteria provided (blank query), return all book instances
-            instances = BookInstance.objects.all().select_related('book', 'storage')
-        
-        # Apply pagination to the results
+            instances = BookInstance.objects.all()
+
+        # Apply related selects, sorting, and pagination
+        instances = (
+            instances
+            .select_related('book', 'storage')
+            .order_by(order_by)
+        )
         paginator = Paginator(instances, 20)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
-    
+
     return render(request, 'rental/book_instance_results.html', {
         'form': form,
         'instances': instances,
         'page_obj': page_obj,
+        'current_sort': sort,
+        'current_dir': direction,
     })
 
 
@@ -388,6 +409,44 @@ def loan_history(request):
     return render(request, 'rental/loan_history.html', context)
 
 
+def process_waiting_reservations_for_book(book_instance):
+    """
+    Process any waiting reservations when a book is returned
+    """
+    
+    logger = logging.getLogger(__name__)
+    today = timezone.localdate()
+    
+    # Find reservations waiting for this specific book
+    waiting_reservations = Reservation.objects.filter(
+        book_instance=book_instance,
+        future_rent__lte=today
+    ).order_by('future_rent')  # First come, first served
+    
+    if not waiting_reservations.exists():
+        return
+    
+    # Process the first waiting reservation
+    next_reservation = waiting_reservations.first()
+    
+    try:
+        with transaction.atomic():
+            # Create loan for the waiting user
+            loan = Loan.objects.create(
+                instance=next_reservation.book_instance,
+                borrower=next_reservation.employee,
+                start_date=today,
+                due_date=next_reservation.future_return,
+            )
+            
+            # Delete the reservation
+            next_reservation.delete()
+            
+            logger.info(f"✅ Auto-processed waiting reservation {next_reservation.reserve_id} → loan {loan.loan_id}")
+            
+    except Exception as e:
+        logger.error(f"Error auto-processing waiting reservation: {e}")
+
 @login_required(login_url='/accounts/employee/login/')
 def return_and_review(request, loan_id):
     if not hasattr(request.user, 'user_type') or request.user.user_type != 'employee':
@@ -417,6 +476,8 @@ def return_and_review(request, loan_id):
             # Mark loan as returned
             loan.return_date = date.today()
             loan.save()
+
+            process_waiting_reservations_for_book(loan.book_instance)
             
             messages.success(request, f'Book "{loan.book_instance.book.title}" returned successfully and your review has been saved!')
             return redirect('loan_return_completed')

@@ -25,6 +25,21 @@
 {% load pagination_tags %}
 <div class="container py-4">
     <h2 class="mb-4 text-center">Book Instance Search Results</h2>
+
+    <form method="get" id="sort-form">
+    {{ form.q }} {# preserve search fields #}
+    <label>Sort by:</label>
+    <select name="sort" onchange="this.form.submit()">
+        <option value="title" {% if current_sort == 'title' %}selected{% endif %}>Title</option>
+        <option value="author" {% if current_sort == 'author' %}selected{% endif %}>Author</option>
+        <option value="isbn" {% if current_sort == 'isbn' %}selected{% endif %}>ISBN</option>       
+    </select>
+    <select name="dir" onchange="this.form.submit()">
+        <option value="asc" {% if current_dir == 'asc' %}selected{% endif %}>Asc</option>
+        <option value="desc" {% if current_dir == 'desc' %}selected{% endif %}>Desc</option>
+    </select>
+    </form>
+
     
     <!-- Display what user searched for or show "all results" -->
     {% if form.is_bound %}
@@ -78,10 +93,14 @@
                                 {% for instance in page_obj %}
                                 <tr>
                                     <td class="text-center">
+                                        <!-- <strong>DEBUG:</strong>
+                                            Image: {{ instance.book.image_url|default:"[no image_url]" }}<br>
+                                            Date: {{ instance.book.publish_date|default:"[no publish_date]" }} -->
                                         {% if instance.book.image_url %}
                                             <img src="{{ instance.book.image_url }}" 
                                                  alt="Cover of {{ instance.book.title }}" 
-                                                 class="book-cover img-thumbnail">
+                                                 class="book-cover img-thumbnail"
+                                                 onerror="this.onerror=null;this.src='https://www.svgrepo.com/show/83343/book.svg';">
                                         {% else %}
                                             <img src="https://www.svgrepo.com/show/83343/book.svg" 
                                                  alt="No cover available" 

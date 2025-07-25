@@ -7,7 +7,7 @@ class Book(models.Model):
     isbn = models.CharField('ISBN', max_length=13, unique=True, blank=True, null=True)
     title = models.CharField('タイトル', max_length=255)
     author = models.CharField('著者', max_length=255)
-    publish_date = models.CharField('出版日', max_length=15)  # Added max_length
+    publish_date = models.CharField('出版日', max_length=15) 
     image_url = models.URLField('画像用リンク', max_length=255, blank=True, null=True)
     subject = models.TextField('ジャンル', blank=True, null=True)
     class Meta:

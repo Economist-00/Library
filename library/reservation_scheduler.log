@@ -2,3 +2,149 @@ Scheduler started successfully
 Processing reservations for 2025-07-17
 Found 0 reservations to process
 Processing complete. Converted: 0, Errors: 0
+Scheduler started successfully
+Scheduler started successfully
+Scheduler started successfully
+Scheduler started successfully
+Scheduler started successfully
+Scheduler started successfully
+Scheduler started successfully
+Scheduler started successfully
+Scheduler started successfully
+APScheduler started successfully in PID 22616
+Timezone: Asia/Tokyo
+Next reservation processing: 2025-07-19 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler started successfully in PID 18056
+Timezone: Asia/Tokyo
+Next reservation processing: 2025-07-19 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler started successfully in PID 21556
+Timezone: Asia/Tokyo
+Next reservation processing: 2025-07-19 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler started successfully in PID 15428
+Timezone: Asia/Tokyo
+Next reservation processing: 2025-07-19 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler started successfully in PID 23220
+Timezone: Asia/Tokyo
+Next reservation processing: 2025-07-19 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler started in PID 20336 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-19 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler started in PID 23084 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-19 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler started in PID 2836 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-20 00:00:00+09:00
+APScheduler debug logging enabled
+Processing reservations for date 2025-07-19
+Reservation processing complete; 0 processed
+APScheduler started in PID 11068 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-20 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler heartbeat - scheduler alive at 2025-07-19 06:22:42.338524+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-19 06:22:42.341334+00:00
+APScheduler started in PID 10876 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-23 00:00:00+09:00
+APScheduler debug logging enabled
+Processing reservations for date 2025-07-22
+Error converting Reservation 11: Loan() got unexpected keyword arguments: 'instance', 'borrower', 'start_date'
+Traceback (most recent call last):
+  File "C:\Users\GuestUser\Desktop\LibraryApp\library\rental\apscheduler.py", line 39, in process_reservations
+    Loan.objects.create(
+    ~~~~~~~~~~~~~~~~~~~^
+        instance=res.book_instance,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        due_date=res.future_return,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\GuestUser\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\GuestUser\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\query.py", line 661, in create
+    obj = self.model(**kwargs)
+  File "C:\Users\GuestUser\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\base.py", line 569, in __init__
+    raise TypeError(
+    ...<2 lines>...
+    )
+TypeError: Loan() got unexpected keyword arguments: 'instance', 'borrower', 'start_date'
+Reservation processing complete; 0 processed
+APScheduler started in PID 23140 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-23 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler heartbeat - scheduler alive at 2025-07-22 02:38:33.208456+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 02:38:33.208591+00:00
+APScheduler started in PID 22452 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-23 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler started in PID 14152 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-23 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler heartbeat - scheduler alive at 2025-07-22 02:46:51.953192+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 02:51:51.959995+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 02:56:51.956649+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 02:56:51.956796+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:01:51.959559+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:01:51.959748+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:06:51.961998+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:06:51.962005+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:11:51.953754+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:11:51.953905+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:16:51.961871+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:16:51.962008+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:21:51.954717+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:21:51.954812+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:26:51.952234+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:31:51.966001+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:31:51.966084+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:36:51.958587+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 03:36:51.958844+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 04:31:51.959076+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 04:31:51.960684+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 04:36:51.953993+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 04:36:51.956724+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 04:41:51.961447+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 04:41:51.964472+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 04:46:51.966279+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 04:46:51.968474+00:00
+APScheduler started in PID 13604 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-23 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler heartbeat - scheduler alive at 2025-07-22 05:00:32.497270+00:00
+APScheduler started in PID 8792 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-23 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler heartbeat - scheduler alive at 2025-07-22 05:08:22.464408+00:00
+APScheduler started in PID 22204 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-23 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler started in PID 12064 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-23 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler started in PID 20600 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-23 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler started in PID 17680 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-23 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler heartbeat - scheduler alive at 2025-07-22 05:32:44.351577+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 05:32:44.352972+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 05:37:44.349871+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 05:37:44.349951+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 05:42:44.346835+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 05:47:44.342738+00:00
+APScheduler heartbeat - scheduler alive at 2025-07-22 05:47:44.342800+00:00
+APScheduler started in PID 2860 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-23 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler started in PID 20596 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-23 00:00:00+09:00
+APScheduler debug logging enabled
+APScheduler started in PID 17484 (TZ:Asia/Tokyo)
+Next reservation processing run: 2025-07-23 00:00:00+09:00
+APScheduler debug logging enabled
