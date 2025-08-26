@@ -2,7 +2,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from .forms import EmployeeLoginForm, LibrarianLoginForm
 from . import views
-# from .views import EmployeeLoginView, LibrarianLoginView
+
 
 urlpatterns = [
     path('', views.login_choice, name='login_choice'),

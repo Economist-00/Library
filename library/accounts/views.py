@@ -2,11 +2,12 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import LoginView
 from django.urls import reverse_lazy
-from .forms import EmployeeCreationForm, LibrarianCreationForm, CustomAuthenticationForm, EmployeeLoginForm, LibrarianLoginForm
+from .forms import EmployeeCreationForm, CustomAuthenticationForm
 
 def employee_login(request):
+    if request.user.is_authenticated:
+        return redirect('rental_index')
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -16,7 +17,7 @@ def employee_login(request):
             
             if user and user.user_type == 'employee':
                 login(request, user)
-                return redirect('rental_index')  # Redirect to rental app
+                return redirect('rental_index')
             else:
                 messages.error(request, 'Invalid credentials or not an employee account')
     else:
@@ -25,6 +26,8 @@ def employee_login(request):
     return render(request, 'accounts/employee_login.html', {'form': form})
 
 def librarian_login(request):
+    if request.user.is_authenticated:
+        return redirect('reg_index')
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -34,7 +37,7 @@ def librarian_login(request):
             
             if user and user.user_type == 'librarian':
                 login(request, user)
-                return redirect('reg_index')  # Redirect to registration app
+                return redirect('reg_index')
             else:
                 messages.error(request, 'Invalid credentials or not a librarian account')
     else:

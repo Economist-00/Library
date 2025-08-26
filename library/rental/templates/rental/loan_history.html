@@ -43,12 +43,9 @@
         <!-- Overdue Alert -->
         {% if overdue_count > 0 %}
             <div class="alert alert-danger" role="alert">
-                <h5 class="alert-heading">⚠️ Overdue Books!</h5>
+                <h5 class="alert-heading">!Overdue Books!</h5>
                 <p>You have {{ overdue_count }} book{{ overdue_count|pluralize }} overdue. Please return them as soon as possible.</p>
                 <hr>
-                <p class="mb-0">
-                    <a href="#overdue-section" class="alert-link">View overdue books below</a>
-                </p>
             </div>
         {% endif %}
 

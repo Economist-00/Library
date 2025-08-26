@@ -8,6 +8,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler import util
+
 from .models import Reservation, Loan
 
 # FORCE console logging
@@ -178,3 +179,7 @@ def start():
         sys.stdout.write(f"{error_msg}\n")
         sys.stdout.flush()
 
+def delete_old_job_executions(max_age=604_800):
+    """Delete old APScheduler job executions from the database."""
+    from django_apscheduler.models import DjangoJobExecution
+    DjangoJobExecution.objects.delete_old_job_executions(max_age)

@@ -1,12 +1,9 @@
 import requests
-import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
-from django.http import HttpResponse, JsonResponse
-from django.views import generic
-from django.db import transaction, IntegrityError
+from django.db import transaction
 from django.db.models import Q
 from django.urls import reverse
 from .forms import IsbnForm, BookInstanceSearchForm, ManualBookForm, BookConfirmationForm
@@ -27,10 +24,7 @@ def isbn_input_view(request):
         form = IsbnForm(request.POST)
         if form.is_valid():
             isbn = form.cleaned_data['isbn']
-            
-            # Fetch book data from OpenBD API
             book_data = fetch_book_from_openbd(isbn)
-            
             if book_data:
                 # Store book data in session for next step
                 book_data['isbn'] = isbn  # Add ISBN to session data
@@ -111,7 +105,7 @@ def manual_book_registration(request):
     if request.method == "POST":
         form = ManualBookForm(request.POST)
         if form.is_valid():
-            # 1) FIND or CREATE the book
+            # FIND or CREATE the book
             book, book_created = Book.objects.get_or_create(
                 title=form.cleaned_data["title"],
                 author=form.cleaned_data["author"],
@@ -122,17 +116,17 @@ def manual_book_registration(request):
                     "subject": form.cleaned_data.get("subject") or "",
                 },
             )
-            # 2) FIND or CREATE the storage by name
+            # FIND or CREATE the storage by name
             storage_name = form.cleaned_data["storage"].strip()
             storage, storage_created = Storage.objects.get_or_create(
                 storage_name=storage_name
             )
-            # 3) CREATE the new BookInstance
+            # CREATE the new BookInstance
             book_instance = BookInstance.objects.create(
                 book=book,
                 storage=storage
             )
-            # 4) SUCCESS MESSAGE
+            # SUCCESS MESSAGE
             if book_created:
                 msg = f'New book "{book.title}" created; copy ID {book_instance.book_instance_id} stored at "{storage_name}".'
             else:

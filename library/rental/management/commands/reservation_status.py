@@ -38,8 +38,8 @@ class Command(BaseCommand):
                 self.stdout.write(f"Should have started: {res.future_rent}")
                 self.stdout.write(f"Status: {status}")
                 if days_overdue > 0:
-                    self.stdout.write(f"   Overdue by: {days_overdue} days")
-                self.stdout.write(f"   Current borrower: {current_loan.employee.username}")
+                    self.stdout.write(f"Overdue by: {days_overdue} days")
+                self.stdout.write(f"Current borrower: {current_loan.employee.username}")
                 self.stdout.write("")
                 waiting_count += 1
             else:

@@ -72,11 +72,11 @@ def book_instance_results(request):
         if isbn or title or author:
             query = Q()
             if isbn:
-                query |= Q(book__isbn__icontains=isbn)
+                query &= Q(book__isbn__exact=isbn)
             if title:
-                query |= Q(book__title__icontains=title)
+                query &= Q(book__title__icontains=title)
             if author:
-                query |= Q(book__author__icontains=author)
+                query &= Q(book__author__icontains=author)
             instances = BookInstance.objects.filter(query)
         else:
             instances = BookInstance.objects.all()
@@ -90,6 +90,10 @@ def book_instance_results(request):
         paginator = Paginator(instances, 20)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
+    
+    else:
+        instances = None
+        page_obj = None
 
     return render(request, 'rental/book_instance_results.html', {
         'form': form,

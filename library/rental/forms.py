@@ -1,11 +1,10 @@
-# forms.py
 from django import forms
 from django.core.exceptions import ValidationError
 from datetime import date, timedelta
-from .models import Reservation, Loan, BookInstance, Review
+from .models import Reservation, Loan, Review
+import re
 
 
-# In your BookInstanceSearchForm
 class BookInstanceSearchForm(forms.Form):
     isbn = forms.CharField(
         label='ISBN', 
@@ -22,6 +21,16 @@ class BookInstanceSearchForm(forms.Form):
         required=False,
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
+
+    def clean_isbn(self):
+        data = self.cleaned_data.get('isbn', '').strip()
+        if not data:
+            return data
+        
+        # Require exactly 13 digits, no letters or special chars
+        if not re.fullmatch(r'\d{13}', data):
+            raise ValidationError("Enter a full 13-digit ISBN number.")
+        return data
 
 
 class DeleteAccountForm(forms.Form):

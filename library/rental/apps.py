@@ -1,5 +1,9 @@
 from django.apps import AppConfig
 import os
+import threading
+import time
+
+
 
 class RentalConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
@@ -9,11 +13,8 @@ class RentalConfig(AppConfig):
         # Only in main process
         if os.environ.get('RUN_MAIN') == 'true':
             # Small delay to avoid database warnings
-            import threading
-            import time
-            
             def start_scheduler():
-                time.sleep(1)  # Wait 1 second
+                time.sleep(1)
                 try:
                     from . import apscheduler
                     apscheduler.start()

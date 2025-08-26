@@ -1,6 +1,38 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Book, BookInstance, Storage
+import datetime
+from .models import Book
+
+
+def validate_publish_date(value):
+    """
+    Allow 'YYYY-MM-DD' or 'YYYY' or 'YYYYMM' formats for publish_date.
+    Raises ValidationError if not valid.
+    """
+    if not value:
+        return 
+
+    value = value.strip()
+    try:
+        datetime.datetime.strptime(value, "%Y-%m-%d")
+        return
+    except ValueError:
+        pass
+
+    # Year only YYYY
+    if len(value) == 4 and value.isdigit():
+        return
+
+    # Year+month YYYYMM
+    if len(value) == 6 and value.isdigit():
+        year = int(value[:4])
+        month = int(value[4:6])
+        if 1 <= month <= 12:
+            return
+
+    raise ValidationError(
+        "Enter a valid publish date: YYYYMMDD, YYYY, or YYYYMM"
+    )
 
 class IsbnForm(forms.Form):
     isbn = forms.CharField(help_text="ISBN", max_length=13, widget=forms.TextInput(attrs={'placeholder': 'Enter 13-digit ISBN'}))
@@ -10,7 +42,24 @@ class IsbnForm(forms.Form):
         if len(data) != 13:
             raise ValidationError("Invalid code - ISBN has to be 13 digits")
         
+        if not data.isdigit():
+            raise ValidationError("Invalid code - ISBN has to be 13 digits")
+        
         return data
+
+    def is_valid_isbn13(self, isbn):
+        """
+        Validate the ISBN-13 checksum.
+        """
+        total = 0
+        for i, char in enumerate(isbn[:12]):
+            digit = int(char)
+            if i % 2 == 0:
+                total += digit
+            else:
+                total += digit * 3
+        check_digit = (10 - (total % 10)) % 10
+        return check_digit == int(isbn[-1])
 
 
 class BookInstanceForm(forms.Form):
@@ -25,6 +74,20 @@ class BookInstanceForm(forms.Form):
 class BookInstanceSearchForm(forms.Form):
     isbn = forms.CharField(label='ISBN', required=False, max_length=13)
     title = forms.CharField(label='Book Title', required=False)
+
+    def is_valid_isbn13(self, isbn):
+        """
+        Validate the ISBN-13 checksum.
+        """
+        total = 0
+        for i, char in enumerate(isbn[:12]):
+            digit = int(char)
+            if i % 2 == 0:
+                total += digit
+            else:
+                total += digit * 3
+        check_digit = (10 - (total % 10)) % 10
+        return check_digit == int(isbn[-1])
     
     
 class ManualBookForm(forms.ModelForm):
@@ -41,7 +104,10 @@ class ManualBookForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Add Bootstrap classes to form fields
         for field in self.fields.values():
-            field.widget.attrs['class'] = 'form-control'
+            existing_classes = field.widget.attrs.get('class', '')
+            if 'form-control' not in existing_classes:
+                # Append form-control without overwriting
+                field.widget.attrs['class'] = (existing_classes + ' form-control').strip()
     
     def clean(self):
         """
@@ -67,6 +133,11 @@ class ManualBookForm(forms.ModelForm):
             self.add_error('storage', 'Please select a valid storage location')
         
         return cleaned_data
+    
+    def clean_publish_date(self):
+        data = self.cleaned_data.get('publish_date', '')
+        validate_publish_date(data)
+        return data
 
     
 
@@ -78,3 +149,8 @@ class BookConfirmationForm(forms.Form):
     subject = forms.CharField(widget=forms.Textarea, required=False)
     image_url = forms.URLField(required=False)
     storage_name = forms.CharField(max_length=255)  
+
+    def clean_publish_date(self):
+        data = self.cleaned_data.get('publish_date', '')
+        validate_publish_date(data)
+        return data

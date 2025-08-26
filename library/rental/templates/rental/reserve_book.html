@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <title>Reserve This Copy</title>
@@ -22,7 +22,7 @@
     
     <form method="post">
         {% csrf_token %}
-        {{ form.book_instance_id }}  <!-- Hidden field -->
+        {{ form.book_instance_id }}
         {{ form.non_field_errors }}
         <div class="mb-3">
             {{ form.future_rent.label_tag }}
