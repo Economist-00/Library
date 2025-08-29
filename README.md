@@ -5,7 +5,6 @@
 Python  
 Django  
 HTML  
-CSS  
 Bootstrap
 
 ## 概要
@@ -16,6 +15,27 @@ Bootstrap
 
 ## ER
 ![論理ER図](論理ER図V3.drawio.png)
+
+## 画面遷移図
+![画面遷移図](画面遷移図V3.drawio.png)
+
+## 画面のサンプル
+最初の画面
+![インデックス画面](images\index.png)
+従業員のメニュー画面
+![レンタルメニュー画面](images\rental_menu.png)
+検索結果画面
+![検索結果画面](images\search_results.png)
+書籍の詳細画面
+![詳細画面](images\details.png)
+履歴画面
+![履歴画面](images\loan.png)
+図書館職員メニュー画面
+![図書館職員メニュー](images\librarian_menu.png)
+外部APIから情報を入手
+![ISBN](images\isbn.png)
+本の登録画面
+![本の登録画面](images\registration.png)
 
 ## 環境
 Language  
